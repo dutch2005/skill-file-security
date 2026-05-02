@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Security Skill — CLI Installer
-// Usage: npx skill-file-security
+// Usage: npx @netxeo/security-skill
 
 import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
 import { join, resolve, dirname } from 'path'

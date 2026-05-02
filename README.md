@@ -14,7 +14,7 @@
 
 🌐 **[Visit the Official Website](https://skill-file-security-website.vercel.app)**
 
-[![npm](https://img.shields.io/npm/v/skill-file-security?color=red&label=npm)](https://www.npmjs.com/package/skill-file-security)
+[![npm](https://img.shields.io/npm/v/@netxeo/security-skill?color=red&label=npm)](https://www.npmjs.com/package/@netxeo/security-skill)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-Top%2010%20✓-red)](https://owasp.org/Top10/)
 [![CWE Top 25](https://img.shields.io/badge/CWE-Top%2025%20✓-orange)](https://cwe.mitre.org/top25/)
@@ -204,7 +204,7 @@ Works out-of-the-box with every major AI coding assistant. No manual setup.
 ## How it works
 
 ```
-1.  npx skill-file-security
+1.  npx @netxeo/security-skill
     └─ installs 29 security instruction files to .skills/security/
     └─ creates memory-security.md (tracks your score over time)
     └─ creates AI config files for every assistant on your machine

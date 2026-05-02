@@ -12,7 +12,9 @@
 
 **Your AI coding assistant just became a security engineer.**
 
-[![npm](https://img.shields.io/npm/v/@netxeo/security-skill?color=red&label=npm)](https://www.npmjs.com/package/@netxeo/security-skill)
+🌐 **[Visit the Official Website](https://skill-file-security-website.vercel.app)**
+
+[![npm](https://img.shields.io/npm/v/skill-file-security?color=red&label=npm)](https://www.npmjs.com/package/skill-file-security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OWASP Top 10](https://img.shields.io/badge/OWASP-Top%2010%20✓-red)](https://owasp.org/Top10/)
 [![CWE Top 25](https://img.shields.io/badge/CWE-Top%2025%20✓-orange)](https://cwe.mitre.org/top25/)

@@ -27,8 +27,20 @@
 
 ## Install it. Right now.
 
+Interactive mode (asks which AI you use):
 ```bash
 npx @netxeo/security-skill
+```
+
+Fast mode (skips the prompt and only injects the file you need):
+```bash
+npx @netxeo/security-skill --yes       # Installs everywhere (silent)
+npx @netxeo/security-skill --all       # Same as --yes
+npx @netxeo/security-skill --claude    # Claude only
+npx @netxeo/security-skill --cursor    # Cursor only
+npx @netxeo/security-skill --windsurf
+npx @netxeo/security-skill --cline
+npx @netxeo/security-skill --copilot
 ```
 
 That's it. Run this in any project. Then type `/security-scan` in your AI.
@@ -108,6 +120,7 @@ You: /security-audit
 | `/security-audit` | Full audit + score /100 + report file |
 | `/security-fix` | Applies fixes — always asks before touching code |
 | `/security-status` | Score history from `memory-security.md` |
+| `/security-history` | Shows before→after audit comparison to prove value |
 | `/security-incident` | Full incident response playbook |
 
 ---
@@ -236,9 +249,11 @@ Works out-of-the-box with every major AI coding assistant. No manual setup.
 
 ## Philosophy
 
+**🎯 Signal vs Noise** — Highly selective. Prioritizes practical fixes and avoids overwhelming you with overly strict or theoretical noise.
+
 **🔧 Non-destructive** — Never auto-applies changes. You approve every fix.
 
-**📚 Educational** — Every issue comes with an explanation and context.
+**📚 Educational** — Explains *why* something is risky in simple terms instead of blindly giving patches, helping you actually learn.
 
 **⚡ Zero setup** — No config, no API keys, no cloud service. Pure AI instructions.
 
@@ -259,6 +274,22 @@ After your first audit, your score lives in `memory-security.md`:
 | 2025-05-03 | 84/100 | 0        | 1    | Fixed RLS + secret |
 | 2025-05-10 | 97/100 | 0        | 0    | 🟢 Excellent        |
 ```
+
+---
+
+## Updating & Custom Rules
+
+To update to the latest security checks, simply re-run the installation:
+
+```bash
+npx @netxeo/security-skill@latest
+```
+
+**⚠️ Important:** 
+- This command will cleanly overwrite the `.skills/security/` folder to provide the newest AI instructions. 
+- **Do not modify files inside `.skills/security/` manually.**
+- Your score history is safe. The installer will **never** overwrite your `memory-security.md` file.
+- **Custom Rules:** If you need to add your own company-specific security rules, add them to the `## Custom Rules` section inside your `memory-security.md` file. The AI will always read them from there.
 
 ---
 

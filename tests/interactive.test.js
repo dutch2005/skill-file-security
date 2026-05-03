@@ -428,4 +428,30 @@ describe('runInteractive', () => {
 
     await expect(runInteractive(testDir, join(__dirname, '..'))).rejects.toThrow('Network failure')
   })
+
+  it('prints detected stack info in banner when stack is detected', async () => {
+    const { select, checkbox } = await import('@inquirer/prompts')
+    const interactiveModule = await import('../interactive.js')
+    const installModule = await import('../install.js')
+
+    // Give testDir a tsconfig.json so scanStack detects language
+    writeFileSync(join(testDir, 'tsconfig.json'), '{}')
+    writeFileSync(join(testDir, 'vercel.json'), '{}')
+
+    vi.mocked(select).mockResolvedValue('web')
+    vi.mocked(checkbox)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    vi.spyOn(installModule, 'runInstall').mockImplementation(() => {})
+
+    await interactiveModule.runInteractive(testDir, join(__dirname, '..'))
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('TypeScript'))
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Vercel'))
+  })
 })

@@ -232,7 +232,7 @@ export async function buildInstallConfig(targetDir) {
   const infrastructure = await checkbox({
     message: 'What infrastructure does it run on?',
     choices: [
-      { value: 'hosting',    name: 'Standard hosting / cloud VM' },
+      { value: 'hosting',    name: 'Standard hosting / cloud VM' }, // maps to baseline only — no extra categories
       { value: 'docker',     name: 'Docker / containers' },
       { value: 'serverless', name: 'Serverless / edge  (Lambda, Vercel Functions, CF Workers)' },
       { value: 'kubernetes', name: 'Kubernetes' },

@@ -134,7 +134,7 @@ export function scanStack(targetDir) {
       } else if (info.language === 'Unknown') {
         info.language = 'JavaScript / Node.js'
       }
-      if (deps.next)               info.framework = `Next.js ${(deps.next || '').replace(/[\^~>=<]/, '')}`
+      if (deps.next)               info.framework = `Next.js ${(deps.next || '').replace(/^[\^~>=<\s]+/, '')}`
       else if (deps.nuxt)          info.framework = 'Nuxt.js'
       else if (deps['@sveltejs/kit']) info.framework = 'SvelteKit'
       else if (deps.astro)         info.framework = 'Astro'

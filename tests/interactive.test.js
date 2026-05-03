@@ -143,6 +143,13 @@ describe('mapAnswersToCategories', () => {
     const result = mapAnswersToCategories({ projectType: 'mobile', infrastructure: [], features: [], compliance: [], hardening: [] })
     expect(result).toContain('17-mobile-security')
   })
+
+  it('hosting infrastructure selection adds no extra categories beyond baseline', async () => {
+    const { mapAnswersToCategories } = await import('../interactive.js')
+    const resultWith = mapAnswersToCategories({ projectType: 'cli', infrastructure: ['hosting'], features: [], compliance: [], hardening: [] })
+    const resultWithout = mapAnswersToCategories({ projectType: 'cli', infrastructure: [], features: [], compliance: [], hardening: [] })
+    expect(resultWith).toEqual(resultWithout)
+  })
 })
 
 // ── Mock @inquirer/prompts ─────────────────────────────────────────────────
@@ -323,7 +330,7 @@ describe('buildInstallConfig', () => {
       .mockResolvedValueOnce([])   // Q3 features
       .mockResolvedValueOnce([])   // Q4 compliance
       .mockResolvedValueOnce([])   // Q5 hardening
-    const result = await buildInstallConfig(testDir)
+    const result = await buildInstallConfig()
     for (const cat of [...ALWAYS_ON, ...ALWAYS_SILENT]) {
       expect(result).toContain(cat)
     }
@@ -338,7 +345,7 @@ describe('buildInstallConfig', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
-    const result = await buildInstallConfig(testDir)
+    const result = await buildInstallConfig()
     expect(result).toContain('09-docker-security')
   })
 
@@ -351,7 +358,7 @@ describe('buildInstallConfig', () => {
       .mockResolvedValueOnce(['ai'])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
-    const result = await buildInstallConfig(testDir)
+    const result = await buildInstallConfig()
     expect(result).toContain('22-ai-llm-security')
   })
 })
@@ -366,17 +373,20 @@ describe('runInteractive', () => {
 
     vi.mocked(select).mockResolvedValue('cli')
     vi.mocked(checkbox)
-      .mockResolvedValueOnce([])              // Q2 infrastructure
-      .mockResolvedValueOnce([])              // Q3 features
-      .mockResolvedValueOnce([])              // Q4 compliance
-      .mockResolvedValueOnce([])              // Q5 hardening
-      .mockResolvedValueOnce([])              // promptCategories user toggle
-      .mockResolvedValueOnce(['antigravity']) // promptAITools
+      .mockResolvedValueOnce([]) // Q2
+      .mockResolvedValueOnce([]) // Q3
+      .mockResolvedValueOnce([]) // Q4
+      .mockResolvedValueOnce([]) // Q5
 
+    const mockPromptCats = vi.fn().mockResolvedValue(['01-secrets-management'])
+    const mockPromptTools = vi.fn().mockResolvedValue(['antigravity'])
     const installSpy = vi.spyOn(installModule, 'runInstall').mockImplementation(() => {})
     const PACKAGE_ROOT_HERE = join(__dirname, '..')
 
-    await runInteractive(testDir, PACKAGE_ROOT_HERE)
+    await runInteractive(testDir, PACKAGE_ROOT_HERE, {
+      _promptCategories: mockPromptCats,
+      _promptAITools: mockPromptTools,
+    })
 
     expect(installSpy).toHaveBeenCalledWith(
       testDir,
@@ -411,10 +421,10 @@ describe('runInteractive', () => {
       .mockResolvedValueOnce([]) // Q4
       .mockResolvedValueOnce([]) // Q5
 
-    vi.spyOn(interactiveModule, 'promptCategories').mockResolvedValue([])
-
     const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {})
-    await interactiveModule.runInteractive(testDir, join(__dirname, '..'))
+    await interactiveModule.runInteractive(testDir, join(__dirname, '..'), {
+      _promptCategories: vi.fn().mockResolvedValue([]),
+    })
     expect(mockExit).toHaveBeenCalledWith(0)
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('nothing to install'))
   })
@@ -434,7 +444,6 @@ describe('runInteractive', () => {
     const interactiveModule = await import('../interactive.js')
     const installModule = await import('../install.js')
 
-    // Give testDir a tsconfig.json so scanStack detects language
     writeFileSync(join(testDir, 'tsconfig.json'), '{}')
     writeFileSync(join(testDir, 'vercel.json'), '{}')
 
@@ -444,12 +453,13 @@ describe('runInteractive', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([])
 
-    vi.spyOn(installModule, 'runInstall').mockImplementation(() => {})
+    const installSpy = vi.spyOn(installModule, 'runInstall').mockImplementation(() => {})
 
-    await interactiveModule.runInteractive(testDir, join(__dirname, '..'))
+    await interactiveModule.runInteractive(testDir, join(__dirname, '..'), {
+      _promptCategories: vi.fn().mockResolvedValue(['01-secrets-management']),
+      _promptAITools: vi.fn().mockResolvedValue([]),
+    })
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('TypeScript'))
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Vercel'))

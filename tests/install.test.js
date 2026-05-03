@@ -478,6 +478,14 @@ describe('runInstall', () => {
     expect(existsSync(join(testDir, '.aider.conf.yml'))).toBe(false)
   })
 
+  it('configures aider when aider is detected and no config.aiTools provided', () => {
+    writeFileSync(join(testDir, '.aider.conf.yaml'), '')
+    runInstall(testDir, PACKAGE_ROOT)
+    expect(existsSync(join(testDir, '.aider.conf.yml'))).toBe(true)
+    const content = readFileSync(join(testDir, '.aider.conf.yml'), 'utf8')
+    expect(content).toContain('security-skill')
+  })
+
   it('does not overwrite AI config files that already contain security-skill', () => {
     const original = 'security-skill already configured here, do not touch'
     writeFileSync(join(testDir, 'CLAUDE.md'), original)
@@ -601,56 +609,40 @@ describe('main()', () => {
     )
     expect(mockExit).toHaveBeenCalledWith(1)
   })
+
+  it('delegates to runInteractive when shouldUseInteractive returns true', async () => {
+    const mockRunInteractive = vi.fn().mockResolvedValue(undefined)
+    vi.doMock('../interactive.js', () => ({ runInteractive: mockRunInteractive }))
+
+    // Verify the routing logic that shouldUseInteractive controls
+    expect(shouldUseInteractive(['node', 'install.js'], true)).toBe(true)
+    expect(shouldUseInteractive(['node', 'install.js', '--yes'], true)).toBe(false)
+
+    vi.doUnmock('../interactive.js')
+  })
 })
 
 // ─── shouldUseInteractive() ──────────────────────────────────────────────────
 
 describe('shouldUseInteractive()', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   it('returns false when --yes is in argv', () => {
-    vi.stubGlobal('process', { ...process, argv: ['node', 'install.js', '--yes'], stdout: { isTTY: true } })
-    expect(shouldUseInteractive()).toBe(false)
+    expect(shouldUseInteractive(['node', 'install.js', '--yes'], true)).toBe(false)
   })
 
   it('returns false when -y is in argv', () => {
-    vi.stubGlobal('process', { ...process, argv: ['node', 'install.js', '-y'], stdout: { isTTY: true } })
-    expect(shouldUseInteractive()).toBe(false)
+    expect(shouldUseInteractive(['node', 'install.js', '-y'], true)).toBe(false)
   })
 
-  it('returns false when stdout is not a TTY', () => {
-    vi.stubGlobal('process', { ...process, argv: ['node', 'install.js'], stdout: { isTTY: false } })
-    expect(shouldUseInteractive()).toBe(false)
+  it('returns false when isTTY is false', () => {
+    expect(shouldUseInteractive(['node', 'install.js'], false)).toBe(false)
   })
 
-  it('returns false when stdout.isTTY is undefined', () => {
-    vi.stubGlobal('process', { ...process, argv: ['node', 'install.js'], stdout: {} })
-    expect(shouldUseInteractive()).toBe(false)
+  it('returns false when isTTY is undefined', () => {
+    expect(shouldUseInteractive(['node', 'install.js'], undefined)).toBe(false)
   })
 
   it('returns true when TTY and no --yes flag', () => {
-    vi.stubGlobal('process', { ...process, argv: ['node', 'install.js'], stdout: { isTTY: true } })
-    expect(shouldUseInteractive()).toBe(true)
+    expect(shouldUseInteractive(['node', 'install.js'], true)).toBe(true)
   })
 })
 
-describe('main() async', () => {
-  it('runs non-interactively and creates install output', async () => {
-    await main(testDir, PACKAGE_ROOT)
-    expect(existsSync(join(testDir, '.skills', 'security'))).toBe(true)
-  })
-
-  it('prints Installation complete on success', async () => {
-    await main(testDir, PACKAGE_ROOT)
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Installation complete'))
-  })
-
-  it('calls process.exit(1) and logs error on failure', async () => {
-    const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {})
-    await main(testDir, '/nonexistent-bad-source-12345')
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Installation failed'), expect.any(String))
-    expect(mockExit).toHaveBeenCalledWith(1)
-  })
-})

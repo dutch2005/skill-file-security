@@ -5,6 +5,9 @@
 import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'module'
+const _require = createRequire(import.meta.url)
+const { version } = _require('./package.json')
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -180,6 +183,9 @@ Proactively flag security issues in all code you write or review.
     writeAIConfig(targetDir, '.github/instructions/security.instructions.md', copilotPathInstruction, '.github/instructions/security.instructions.md (Copilot path-specific)')
   }
 
+  // Aider is opt-in when no config is provided: only configure when already detected.
+  // All other tools default to on (shouldConfigureAI returns true when config.aiTools is undefined).
+  // This asymmetry is intentional — auto-creating .aider.conf.yml in an unrelated project is invasive.
   const configureAider = config.aiTools
     ? config.aiTools.includes('aider')
     : detectedAIs.includes('aider')
@@ -199,26 +205,26 @@ Proactively flag security issues in all code you write or review.
 
 // Exported so it can be tested in-process without subprocess overhead.
 export async function main(targetDir = process.cwd(), sourceDir = __dirname) {
-  if (shouldUseInteractive()) {
-    const { runInteractive } = await import('./interactive.js')
-    await runInteractive(targetDir, sourceDir)
-    return
-  }
-
-  // Non-interactive path
-  console.log('')
-  console.log(c('bold', c('cyan', '╔══════════════════════════════════════════════╗')))
-  console.log(c('bold', c('cyan', '║        🔐  SECURITY SKILL  v1.0.0            ║')))
-  console.log(c('bold', c('cyan', '║   100% Code Security for Any Project          ║')))
-  console.log(c('bold', c('cyan', '╚══════════════════════════════════════════════╝')))
-  console.log('')
-  console.log(c('dim', '  Covers: CWE Top 25 · OWASP Top 10 · ASVS L1-3'))
-  console.log(c('dim', '  Works with: Claude · Cursor · Copilot · Windsurf · Cline · Codex · Aider · Gemini'))
-  console.log('')
-  console.log('📦 Installing security-skill...')
-  console.log('')
-
   try {
+    if (shouldUseInteractive()) {
+      const { runInteractive } = await import('./interactive.js')
+      await runInteractive(targetDir, sourceDir)
+      return
+    }
+
+    // Non-interactive path
+    console.log('')
+    console.log(c('bold', c('cyan', '╔══════════════════════════════════════════════╗')))
+    console.log(c('bold', c('cyan', `║        🔐  SECURITY SKILL  v${version.padEnd(16)}║`)))
+    console.log(c('bold', c('cyan', '║   100% Code Security for Any Project          ║')))
+    console.log(c('bold', c('cyan', '╚══════════════════════════════════════════════╝')))
+    console.log('')
+    console.log(c('dim', '  Covers: CWE Top 25 · OWASP Top 10 · ASVS L1-3'))
+    console.log(c('dim', '  Works with: Claude · Cursor · Copilot · Windsurf · Cline · Codex · Aider · Gemini'))
+    console.log('')
+    console.log('📦 Installing security-skill...')
+    console.log('')
+
     runInstall(targetDir, sourceDir)
 
     console.log('')
@@ -243,17 +249,18 @@ export async function main(targetDir = process.cwd(), sourceDir = __dirname) {
   }
 }
 
-export function shouldUseInteractive() {
-  return Boolean(process.stdout.isTTY) &&
-    !process.argv.includes('--yes') &&
-    !process.argv.includes('-y')
+export function shouldUseInteractive(
+  argv = process.argv,
+  isTTY = Boolean(process.stdout?.isTTY),
+) {
+  return isTTY && !argv.includes('--yes') && !argv.includes('-y')
 }
 
 // ── CLI entry point ──────────────────────────────────────────────────────────
 // isMain is true only when executed directly (node install.js / npx).
 // When imported by tests, isMain is false and main() is never called here.
 const isMain = process.argv[1]
-  ? resolve(process.argv[1]) === resolve(__filename)
+  ? resolve(process.argv[1]).toLowerCase() === resolve(__filename).toLowerCase()
   : false
 
 if (isMain) {

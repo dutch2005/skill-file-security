@@ -165,7 +165,7 @@ export function scanStack(targetDir) {
 export function mapAnswersToCategories(answers) {
   const cats = new Set([...ALWAYS_ON, ...ALWAYS_SILENT])
 
-  const add = (list) => list?.forEach(c => cats.add(c))
+  const add = (list) => list?.forEach(cat => cats.add(cat))
 
   add(QUESTION_MAPPINGS.projectType[answers.projectType])
   for (const key of answers.infrastructure ?? []) add(QUESTION_MAPPINGS.infrastructure[key])
@@ -208,7 +208,7 @@ export async function promptAITools(detected) {
     checked: detected.includes(tool),
   }))
 
-  return checkbox({
+  return await checkbox({
     message: '🤖 Configure AI tools?  (detected tools are pre-selected)',
     choices,
   })
@@ -216,7 +216,7 @@ export async function promptAITools(detected) {
 
 // ── buildInstallConfig ────────────────────────────────────────────────────────
 
-export async function buildInstallConfig(targetDir) {
+export async function buildInstallConfig() {
   const { select, checkbox } = await import('@inquirer/prompts')
 
   const projectType = await select({
@@ -278,10 +278,12 @@ export async function buildInstallConfig(targetDir) {
 
 // ── runInteractive ────────────────────────────────────────────────────────────
 
-export async function runInteractive(targetDir, sourceDir) {
+export async function runInteractive(
+  targetDir,
+  sourceDir,
+  { _promptCategories = promptCategories, _promptAITools = promptAITools } = {},
+) {
   const { runInstall, detectAI, c } = await import('./install.js')
-  // Dynamic self-import so vi.spyOn on the module's named exports is respected
-  const self = await import('./interactive.js')
 
   try {
     console.log('')
@@ -300,16 +302,18 @@ export async function runInteractive(targetDir, sourceDir) {
     console.log(c('dim', "Let's tailor security coverage to your project. (~60 seconds)"))
     console.log('')
 
-    const suggested  = await buildInstallConfig(targetDir)
-    const categories = await self.promptCategories(suggested)
+    const suggested  = await buildInstallConfig()
+    const categories = await _promptCategories(suggested)
 
+    // Defensive guard: in normal flow promptCategories always returns ≥10 categories.
+    // This can only be reached if promptCategories is replaced via the injection parameter.
     if (categories.length === 0) {
       console.log('\nNo categories selected — nothing to install.')
       process.exit(0)
       return
     }
 
-    const aiTools = await self.promptAITools(detectAI(targetDir))
+    const aiTools = await _promptAITools(detectAI(targetDir))
 
     console.log('')
     console.log('📦 Installing...')

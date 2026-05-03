@@ -182,7 +182,7 @@ Proactively flag security issues in all code you write or review.
 
   const configureAider = config.aiTools
     ? config.aiTools.includes('aider')
-    : (detectedAIs.includes('aider') || existsSync(join(targetDir, '.aider.conf.yml')))
+    : detectedAIs.includes('aider')
   if (configureAider)
     writeAIConfig(targetDir, '.aider.conf.yml', `# security-skill\nread:\n  - .skills/security/skill.md\n  - memory-security.md\n`, '.aider.conf.yml (Aider)')
 

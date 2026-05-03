@@ -30,6 +30,7 @@
   },
   "files": [
     "install.js",
+    "interactive.js",
     "skill.md",
     "instructions/",
     "templates/",
@@ -40,8 +41,17 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node install.js"
+    "start": "node install.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@inquirer/prompts": "^6.0.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.0",
+    "vitest": "^2.1.0"
+  }
 }

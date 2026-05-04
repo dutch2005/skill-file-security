@@ -5,12 +5,11 @@
 import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
 import { join, resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { createRequire } from 'module'
-const _require = createRequire(import.meta.url)
-const { version } = _require('./package.json')
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+const { version } = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'))
 
 export const colors = {
   reset: '\x1b[0m',
